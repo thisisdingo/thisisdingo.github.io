@@ -152,8 +152,8 @@
       // Register user with socket server
       socket.emit("register", userId, roomId);
 
-      socket.on("user-joined", ({ userId: joinedUserId }) => {
-        if (joinedUserId !== userId) {
+      socket.on("user-joined", (data) => {
+        if (data.userId !== userId) {
           opponentId = joinedUserId;
           peerConnection.createOffer().then((offer) => {
             peerConnection.setLocalDescription(offer);
@@ -164,6 +164,8 @@
               offer: peerConnection.localDescription,
             });
           });
+        }else{
+          alert("Connected someone")
         }
       });
 
