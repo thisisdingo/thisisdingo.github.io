@@ -1,213 +1,421 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Call</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional PDF toolkit: scan, compress, and sign documents in one app.">
+    <title>PDF Toolkit - Scanner, Compressor & Sign</title>
     <style>
-      video {
-        width: 300px;
-        border: 1px solid black;
-        margin: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <div>
-      <video id="localVideo" autoplay muted playsinline></video>
-      <video id="remoteVideo" autoplay playsinline></video>
-      <button id="reconnectButton">Reconnect</button>
-    </div>
-
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-
-      const roomId = urlParams.get("roomId"); // Set room ID here
-
-      const socket = io("https://coacherapp.online/", {
-        withCredentials: false,
-      });
-
-      let peerConnection = null;
-      let remoteStream = null;
-      let isReconnecting = false;
-      let opponentId = null;
-
-      const localVideo = document.getElementById("localVideo");
-      const remoteVideo = document.getElementById("remoteVideo");
-      const reconnectButton = document.getElementById("reconnectButton");
-
-      // Function to create new WebRTC connection
-      const createPeerConnection = () => {
-        const configuration = {
-          iceServers: [
-            { urls: "stun:104.248.38.3:3478" },
-            {
-              username: "coacher",
-              credential: "pass2",
-              urls: "turn:104.248.38.3:3478",
-            },
-          ],
-        };
-
-        if (peerConnection) {
-          peerConnection.close();
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        peerConnection = new RTCPeerConnection(configuration);
-
-        // Handle ICE candidates
-        peerConnection.onicecandidate = (event) => {
-          if (event.candidate && opponentId) {
-            socket.emit("signal", {
-              to: opponentId,
-              roomId,
-              candidate: event.candidate,
-            });
-          }
-        };
-
-        // Handle remote stream
-        peerConnection.ontrack = (event) => {
-          remoteStream = event.streams[0];
-          remoteVideo.srcObject = remoteStream;
-        };
-
-        peerConnection.onconnectionstatechange = () => {
-          console.log("Connection state:", peerConnection.connectionState);
-          if (peerConnection.connectionState === "failed") {
-            console.log("Connection failed, attempting to reconnect...");
-            handleReconnect();
-          }
-        };
-      };
-
-      // Function to handle reconnection
-      const handleReconnect = async () => {
-        if (!isReconnecting) {
-          console.log("Starting reconnect process...");
-          isReconnecting = true;
-
-          setTimeout(() => {
-            if (isReconnecting) {
-              console.log("Reconnect attempt timed out, resetting...");
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        /* Features */
+        .features {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: #2d3748;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2.5rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+        
+        .feature-card p {
+            color: #718096;
+            line-height: 1.8;
+        }
+        
+        /* Benefits */
+        .benefits {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .benefits h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: #2d3748;
+        }
+        
+        .benefit-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-item:hover {
+            background: #e9ecef;
+            transform: translateX(10px);
+        }
+        
+        .benefit-check {
+            min-width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        
+        .benefit-text {
+            flex: 1;
+        }
+        
+        .benefit-text h4 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+        
+        .benefit-text p {
+            color: #718096;
+        }
+        
+        /* How it works */
+        .how-it-works {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border: 3px solid white;
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .step p {
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .footer-links {
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            opacity: 1;
+        }
+        
+        footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5rem;
             }
-          }, 5000);
-
-          createPeerConnection();
-
-          navigator.mediaDevices
-            .getUserMedia({ video: true, audio: true })
-            .then((stream) => {
-              localVideo.srcObject = stream;
-
-              stream.getTracks().forEach((track) => {
-                peerConnection.addTrack(track, stream);
-              });
-
-              if (opponentId) {
-                peerConnection
-                  .createOffer()
-                  .then((offer) => {
-                    peerConnection.setLocalDescription(offer);
-                    socket.emit("signal", {
-                      to: opponentId,
-                      roomId,
-                      offer: peerConnection.localDescription,
-                    });
-                  })
-                  .finally(() => {
-                    isReconnecting = false;
-                  });
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error accessing media devices during reconnect:",
-                error
-              );
-              isReconnecting = false;
-            });
+            
+            header p {
+                font-size: 1.1rem;
+            }
+            
+            .features h2,
+            .benefits h2,
+            .how-it-works h2 {
+                font-size: 2rem;
+            }
+            
+            .feature-grid,
+            .steps {
+                grid-template-columns: 1fr;
+            }
         }
-      };
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1>📄 PDF Toolkit</h1>
+            <p>Everything for working with PDF documents in one app</p>
+            <a href="#" class="cta-button">Download App</a>
+        </div>
+    </header>
 
-      // Initial connection setup
-      createPeerConnection();
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2>Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📸</div>
+                    <h3>PDF Scanner</h3>
+                    <p>Turn photos into high-quality PDF documents. Automatic edge detection and image quality enhancement.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗜️</div>
+                    <h3>Compressor</h3>
+                    <p>Compress PDF files without quality loss. Reduce document size by up to 80% for easy sending and storage.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✍️</div>
+                    <h3>Digital Signature</h3>
+                    <p>Add your signature to documents right from your phone. Fast, secure, and legally valid.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          localVideo.srcObject = stream;
+    <!-- Benefits -->
+    <section class="benefits">
+        <div class="container">
+            <h2>Why Choose Us?</h2>
+            <div class="benefit-list">
+                <div class="benefit-item">
+                    <div class="benefit-check">✓</div>
+                    <div class="benefit-text">
+                        <h4>Easy to Use</h4>
+                        <p>Intuitive interface allows you to work with documents without training</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-check">✓</div>
+                    <div class="benefit-text">
+                        <h4>High Speed</h4>
+                        <p>Process documents in seconds</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-check">✓</div>
+                    <div class="benefit-text">
+                        <h4>Data Security</h4>
+                        <p>All files are processed locally on your device</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-check">✓</div>
+                    <div class="benefit-text">
+                        <h4>Time Saving</h4>
+                        <p>All PDF tools in one app</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-check">✓</div>
+                    <div class="benefit-text">
+                        <h4>Professional Quality</h4>
+                        <p>Results suitable for business documentation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-          stream.getTracks().forEach((track) => {
-            peerConnection.addTrack(track, stream);
-          });
-        });
+    <!-- How it works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Choose Function</h3>
+                    <p>Scan, compress, or sign a document</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Upload File</h3>
+                    <p>Take a photo or select an existing PDF</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Process</h3>
+                    <p>Adjust settings and apply changes</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Save</h3>
+                    <p>Get the finished document and share it</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-      // Register user with socket server
-      socket.emit("register", roomId);
-
-      socket.on("user-joined", ({ joinedUserId }) => {
-        opponentId = joinedUserId;
-        peerConnection.createOffer().then((offer) => {
-          peerConnection.setLocalDescription(offer);
-          socket.emit("signal", {
-            to: joinedUserId,
-            roomId,
-            offer: peerConnection.localDescription,
-          });
-        });
-      });
-
-      socket.on("existing-users", ({ users }) => {
-        if (users.length > 0) {
-          opponentId = users[0];
-          handleReconnect();
-        }
-      });
-
-      socket.on("signal", (data) => {
-        if (data.offer) {
-          console.log("Received offer, creating answer");
-          peerConnection
-            .setRemoteDescription(new RTCSessionDescription(data.offer))
-            .then(() => peerConnection.createAnswer())
-            .then((answer) => {
-              peerConnection.setLocalDescription(answer);
-              socket.emit("signal", {
-                to: data.from,
-                roomId,
-                answer: peerConnection.localDescription,
-              });
-            })
-            .catch((error) => {
-              console.error("Error handling offer and creating answer:", error);
-            });
-        } else if (data.answer) {
-          peerConnection
-            .setRemoteDescription(new RTCSessionDescription(data.answer))
-            .catch((error) => {
-              console.error(
-                "Error setting remote description for answer:",
-                error
-              );
-            });
-        } else if (data.candidate) {
-          peerConnection
-            .addIceCandidate(new RTCIceCandidate(data.candidate))
-            .catch((error) => {
-              console.error("Error adding ICE candidate", error);
-            });
-        }
-      });
-
-      reconnectButton.addEventListener("click", handleReconnect);
-
-      // Cleanup on page unload
-      window.addEventListener("beforeunload", () => {
-        socket.emit("leave-call", roomId);
-      });
-    </script>
-  </body>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="mailto:e@michil.ru">Contact: e@michil.ru</a>
+            </div>
+            <p>&copy; 2026 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
 </html>
